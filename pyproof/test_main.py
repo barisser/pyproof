@@ -19,3 +19,7 @@ def test_membership():
 		new_acc = main.increment_membership_accumulator(acc, value, n)
 		assert main.verify_membership(new_acc, value, acc, n)
 
+
+def test_make_tree():
+	values = [str(x) for x in range(113)]
+	tree = main.make_tree(values)
