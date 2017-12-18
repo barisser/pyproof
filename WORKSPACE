@@ -4,21 +4,25 @@ git_repository(
 	    commit = "44711d8ef543f6232aec8445fb5adce9a04767f9",
 		)
 
-# Only needed for PIP support:
-load("@io_bazel_rules_python//python:pip.bzl", "pip_repositories")
 
+load("@io_bazel_rules_python//python:pip.bzl", "pip_repositories", "pip_import")
 pip_repositories()
 
-load("@io_bazel_rules_python//python:pip.bzl", "pip_import")
-
-# This rule translates the specified requirements.txt into
-# @my_deps//:requirements.bzl, which itself exposes a pip_install method.
 pip_import(
-   name = "my_deps",
-      requirements = "//:requirements.txt",
-      )
+   name = "pip_libs",
+   requirements = "//:requirements.txt",
+)
 
-# Load the pip_install symbol for my_deps, and create the dependencies'
-# repositories.
-load("@my_deps//:requirements.bzl", "pip_install")
-#pip_install()
+load("@pip_libs//:requirements.bzl", pip_libs_install = "pip_install")
+pip_libs_install()
+
+
+load('@bazel_tools//tools/build_defs/repo:git.bzl', git_repo = 'git_repository')
+
+git_repo(
+    name = "io_bazel_rules_pex",
+    remote = "https://github.com/benley/bazel_rules_pex.git",
+    commit = "bde25c1c1a21f4670fb56ab8111f342f30aca1a9",
+)
+load("@io_bazel_rules_pex//pex:pex_rules.bzl", "pex_repositories")
+pex_repositories()
