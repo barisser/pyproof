@@ -22,4 +22,6 @@ def test_membership():
 
 def test_make_tree():
 	values = [str(x) for x in range(113)]
-	tree = main.make_tree(values)
+	root, paths = main.make_tree(values)
+	assert root == 'fa13bb36c022a6943f37c638126a2c88fc8d008eb5a9fe8fcde17026807feae4'
+	assert paths == {}

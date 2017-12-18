@@ -47,13 +47,15 @@ def find_sibling(address, nodes, addresses):
 	n = int(address, 2)
 	if n % 1 == 0:
 		sibling_n = n + 1
+		left = True
 	else:
 		sibling_n = n - 1
+		left = False
 	sibling_address = leaf_n_to_address(sibling_n)
 	if sibling_address in addresses:
-		return addresses[sibling_address]
+		return addresses[sibling_address], left
 	else:
-		return None
+		return None, None
 
 def make_parent_hash(address1, address2, addresses):
 	n1 = int(address1, 2)
@@ -74,17 +76,24 @@ def make_tree(leaf_values):
 	nodes = dict([(lhash, {'address': leaf_n_to_address(n), 'parent': None, 'sibling': None}) for n, lhash in enumerate(leaf_hashes)])
 	addresses = dict([(nodes[lhash]['address'], lhash) for lhash in nodes])
 
+	paths = {}
+
 	level_hashes = copy.copy(leaf_hashes)
 	while len(level_hashes) > 1:
 		new_level_hashes = []
 		for lhash in level_hashes:
-			sibling_hash = find_sibling(nodes[lhash]['address'], nodes, addresses)
+			sibling_hash, left = find_sibling(nodes[lhash]['address'], nodes, addresses)
 			print sibling_hash
 			if sibling_hash:
 				new_hash = make_parent_hash(nodes[lhash]['address'], nodes[sibling_hash]['address'], addresses)
 				nodes[lhash]['sibling'] = sibling_hash
 				nodes[sibling_hash]['sibling'] = lhash
 				nodes[lhash]['parent'] = new_hash
+				
+				if left:
+					paths[lhash] = [sibling_hash, lhash, new_hash]
+				else:
+					paths[lhash] = [lhash, sibling_hash, new_hash]
 			else:
 				new_hash = lhash
 
@@ -93,6 +102,23 @@ def make_tree(leaf_values):
 
 
 		level_hashes = list(set(new_level_hashes))
-		#import pdb;pdb.set_trace()
 
-	return level_hashes[0]
+	return level_hashes[0], paths
+
+
+def verify_path(path, leaf, root):
+	"""
+	Verifes a Merkle Path for correctness.
+	"""	
+	last_parent = None
+	assert leaf in path[0][:1]
+	for left, right, parent in path:
+		assert hashlib.sha256(left + right).hexdigest() == parent
+		last_parent = parent
+	assert last_parent == root
+
+def find_path(paths, leaf):
+	"""
+	For a given
+	"""
+	path = []
