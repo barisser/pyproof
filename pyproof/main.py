@@ -205,3 +205,27 @@ def verify_path(path, leaf, root, algo='sha256'):
 
     assert last_parent == root
     return address
+
+# other
+
+def xgcd(b, n):
+	"""
+	Performs Extended Euclidian Algorithm.
+	Returns GCD(X, Y), A, B for equation
+	X*A + Y*B = GCD(X, Y) where X, Y, A, B are all integers.
+	"""
+    x0, x1, y0, y1 = 1, 0, 0, 1
+    while n != 0:
+        q, b, n = b // n, n, b % n
+        x0, x1 = x1, x0 - q * x1
+        y0, y1 = y1, y0 - q * y1
+    return  b, x0, y0
+
+
+ def nonmembership_witness(acc, value, n, start_acc):
+ 	gcd, x, y = xbcd(acc, value)
+ 	assert gcd == 1
+ 	assert False
+ 	d = None # TODO
+ 	a = x
+ 	return a, d
