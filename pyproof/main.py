@@ -1,5 +1,6 @@
 import copy
 import hashlib
+import math
 
 # Cryptographic Accumulators
 
@@ -33,92 +34,165 @@ def verify_membership(acc, value, witness, n):
 
 # Merkle Trees
 
-def leaf_n_to_address(n):
-	"""
-	Takes the nth leaf node, starting at 0 and going left to right,
-	and translates it into an address format.
-	"""
-	return "{0:b}".format(n)
+def sha256(value):
+	return hashlib.sha256(value).hexdigest()
 
-def find_parent_address(address):
-	return leaf_n_to_address(int(address, 2) / 2)
-
-def find_sibling(address, nodes, addresses):
-	n = int(address, 2)
-	if n % 1 == 0:
-		sibling_n = n + 1
-		left = True
+def do_hash(value, algo='sha256'):
+	if algo == 'sha256':
+		return sha256(value)
 	else:
-		sibling_n = n - 1
-		left = False
-	sibling_address = leaf_n_to_address(sibling_n)
-	if sibling_address in addresses:
-		return addresses[sibling_address], left
+		raise Exception("Unknown hash algo: {0}".format(algo))
+
+
+def int_to_address(n, length):
+	return "{0:b}".format(n).zfill(length)
+
+def parent_address(address):
+	if len(address) >= 1:
+		return address[0:-1]
 	else:
-		return None, None
-
-def make_parent_hash(address1, address2, addresses):
-	n1 = int(address1, 2)
-	n2 = int(address2, 2)
-	assert n1 != n2
-	h1 = addresses[address1]
-	h2 = addresses[address2]
-	if n1 < n2:
-		return hashlib.sha256("{0}{1}".format(h1, h2)).hexdigest()
-	elif n1 > n2:
-		return hashlib.sha256("{0}{1}".format(h2, h1)).hexdigest()
+		return ''
 
 
+class MerkleTree:
+	def __init__(self, values, algo='sha256'):
+		self.algo = algo
+		self.nodes = {}
+		self.addresses = {}
+		self.unresolved_nodes = []
+		self.address_length = int(math.ceil(math.log(len(values), 2.0)))
 
-def make_tree(leaf_values):
-	leaf_hashes = [hashlib.sha256(x).hexdigest() for x in leaf_values]
+		for n, v in enumerate(values):
+			h = do_hash(v, self.algo)
+			self.nodes[h] = {'parent': None, 'address': int_to_address(n, self.address_length)}
+			self.unresolved_nodes.append(h)
+			self.addresses[self.nodes[h]['address']] = h
 
-	nodes = dict([(lhash, {'address': leaf_n_to_address(n), 'parent': None, 'sibling': None}) for n, lhash in enumerate(leaf_hashes)])
-	addresses = dict([(nodes[lhash]['address'], lhash) for lhash in nodes])
+		self.root = None
 
-	paths = {}
+		while len(self.unresolved_nodes) > 0:
+			self.build_tree()
+			self.root = self.addresses['']
 
-	level_hashes = copy.copy(leaf_hashes)
-	while len(level_hashes) > 1:
-		new_level_hashes = []
-		for lhash in level_hashes:
-			sibling_hash, left = find_sibling(nodes[lhash]['address'], nodes, addresses)
-			print sibling_hash
-			if sibling_hash:
-				new_hash = make_parent_hash(nodes[lhash]['address'], nodes[sibling_hash]['address'], addresses)
-				nodes[lhash]['sibling'] = sibling_hash
-				nodes[sibling_hash]['sibling'] = lhash
-				nodes[lhash]['parent'] = new_hash
-				
-				if left:
-					paths[lhash] = [sibling_hash, lhash, new_hash]
+
+	def find_sibling(self, hashv):
+		address = self.nodes[hashv]['address']
+		if address == '':
+			return None, None
+		addr_n = int(address, 2)
+		if addr_n % 2 == 1:
+			sibl_n = addr_n - 1
+			left_sibl = True
+		else:
+			sibl_n = addr_n + 1
+			left_sibl = False
+		sibl_address = int_to_address(sibl_n, len(address))
+		if sibl_address in self.addresses:
+			return self.addresses[sibl_address], left_sibl
+		else:
+			return hashv, False
+
+
+	def find_path(self, start):
+		"""
+		Finds a path from a node hash to the root.
+		If it does not exists it throws an exception.
+		A path is structured in the following format:
+		A list of steps:
+		   - Each step shows [left_hash, right_hash, next_hash]
+		   - next_hash must be either the left or right hash in the next step.
+		   - Within each step, left_hash + right_hash must hash to next_hash.
+		"""
+		path = []
+		leaf = start
+		seen_nodes = []
+		while True:
+			if self.nodes[leaf]['address'] == '':
+				return path
+			
+			left = leaf if self.nodes[leaf]['left'] else self.nodes[leaf]['sibling']
+			right = leaf if not self.nodes[leaf]['left'] else self.nodes[leaf]['sibling']
+			next_hash = do_hash(left + right, self.algo)
+			leaf = self.nodes[leaf]['parent']
+			assert leaf == next_hash
+			assert not next_hash in seen_nodes
+			assert next_hash in self.nodes
+			step = [left, right, next_hash]
+			path.append(step)
+
+
+
+	def build_tree(self):
+		resolved_nodes = []
+		for nodeh in self.unresolved_nodes:
+			sibling, left_sibl = self.find_sibling(nodeh)
+			
+			if nodeh in resolved_nodes:
+				continue
+
+			if sibling:
+				self.nodes[nodeh]['sibling'] = sibling
+				self.nodes[nodeh]['left'] = not left_sibl
+				self.nodes[sibling]['left'] = left_sibl
+				self.nodes[sibling]['sibling'] = nodeh
+
+				if left_sibl:
+					parent = do_hash(sibling + nodeh, self.algo)
 				else:
-					paths[lhash] = [lhash, sibling_hash, new_hash]
+					parent = do_hash(nodeh + sibling, self.algo)
+				self.nodes[sibling]['parent'] = parent
+				self.nodes[nodeh]['parent'] = parent
+				resolved_nodes.append(nodeh)
+				resolved_nodes.append(sibling)
+
+				paddress = parent_address(self.nodes[nodeh]['address'])
+				self.nodes[parent] = {'address': paddress}
+				self.addresses[paddress] = parent
+				if paddress != '':
+					self.unresolved_nodes.append(parent)
 			else:
-				new_hash = lhash
-
-			new_level_hashes.append(new_hash)
-			nodes[new_hash] = {'address': find_parent_address(nodes[lhash]['address']), 'parent': None, 'sibling': None}
+				self.nodes[nodeh]['address'] = parent_address(self.nodes[nodeh]['address'])
+		self.unresolved_nodes = list(set(self.unresolved_nodes) - set(resolved_nodes))
 
 
-		level_hashes = list(set(new_level_hashes))
-
-	return level_hashes[0], paths
-
-
-def verify_path(path, leaf, root):
+def verify_path(path, leaf, root, algo='sha256'):
 	"""
 	Verifes a Merkle Path for correctness.
+	If false, throws an error.
+	If true, returns the binary address of the Merkle Path.
 	"""	
-	last_parent = None
+	last_parent = leaf
 	assert leaf in path[0][:1]
+	address = ''
 	for left, right, parent in path:
-		assert hashlib.sha256(left + right).hexdigest() == parent
+		assert do_hash(left + right, algo) == parent
+		if last_parent == left:
+			address = "0" + address
+		elif last_parent == right:
+			address = "1" + address
+		else:
+			assert False 
 		last_parent = parent
-	assert last_parent == root
 
-def find_path(paths, leaf):
-	"""
-	For a given
-	"""
-	path = []
+	assert last_parent == root
+	return address
+
+# def find_path(paths, leaf_value):
+# 	"""
+# 	For a given leaf and datastructure representing all paths,
+# 	find the path from the specified leaf to the root.
+# 	The path will be represented by a list of lists.
+# 	Each list is a step, ie [LEFT_HASH, RIGHT_HASH, PARENT_HASH]
+# 	"""
+# 	path = []
+# 	leaf = hashlib.sha256(leaf_value).hexdigest()
+# 	assert leaf in paths
+
+# 	while True:
+# 		if leaf in paths:
+# 			step = paths[leaf]
+# 			path.append(step)
+# 			leaf = step[2]
+# 			print leaf
+# 		else:
+# 			return path
