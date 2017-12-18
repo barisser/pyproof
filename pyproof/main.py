@@ -37,11 +37,15 @@ def verify_membership(acc, value, witness, n):
 # Merkle Trees
 
 def sha256(value):
-    """Because I prefer this"""
+    """Because I prefer this format."""
     return hashlib.sha256(value).hexdigest()
 
 
 def do_hash(value, algo='sha256'):
+    """
+    Handles computation of all hashes.
+    Support other hash algorithms later.
+    """
     if algo == 'sha256':
         return sha256(value)
     else:
@@ -49,10 +53,18 @@ def do_hash(value, algo='sha256'):
 
 
 def int_to_address(n, length):
+    """
+    Convert an index location to a binary representation
+    of address.  Length refers to the binary length
+    of the string.  This corresponds to max depth of tree.
+    """
     return "{0:b}".format(n).zfill(length)
 
 
 def parent_address(address):
+    """
+    For a given address, compute the address of the parent.
+    """
     if len(address) >= 1:
         return address[0:-1]
     else:
@@ -68,12 +80,12 @@ class MerkleTree:
         self.unresolved_nodes = []
         self.address_length = int(math.ceil(math.log(len(values), 2.0)))
 
-        for n, v in enumerate(values):
-            h = do_hash(v, self.algo)
-            self.nodes[h] = {
+        for n, value in enumerate(values):
+            hashv = do_hash(value, self.algo)
+            self.nodes[hashv] = {
                 'parent': None, 'address': int_to_address(n, self.address_length)}
-            self.unresolved_nodes.append(h)
-            self.addresses[self.nodes[h]['address']] = h
+            self.unresolved_nodes.append(hashv)
+            self.addresses[self.nodes[hashv]['address']] = hashv
 
         self.root = None
 
@@ -82,6 +94,11 @@ class MerkleTree:
             self.root = self.addresses['']
 
     def find_sibling(self, hashv):
+        """
+        For a given node hash, finds a sibling of that hash
+        if one exists.  If it does not exist, creates a duplicate
+        of this node (as per Merkle Tree algorithm).
+        """
         address = self.nodes[hashv]['address']
         if address == '':
             return None, None
@@ -122,12 +139,17 @@ class MerkleTree:
             next_hash = do_hash(left + right, self.algo)
             leaf = self.nodes[leaf]['parent']
             assert leaf == next_hash
-            assert not next_hash in seen_nodes
+            assert next_hash not in seen_nodes
             assert next_hash in self.nodes
             step = [left, right, next_hash]
             path.append(step)
 
     def build_tree(self):
+        """
+        Resolves unresolved nodes in the merkle tree.
+        This function progressively stitches the tree together
+        until it reaches the root node.
+        """
         resolved_nodes = []
         for nodeh in self.unresolved_nodes:
             sibling, left_sibl = self.find_sibling(nodeh)

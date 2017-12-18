@@ -4,3 +4,7 @@ __pycache__
 *~
 .coverage
 bazel-*
+dist
+build
+*.egg-info
+myenv
