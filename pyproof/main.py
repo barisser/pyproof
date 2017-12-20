@@ -209,11 +209,11 @@ def verify_path(path, leaf, root, algo='sha256'):
 # other
 
 def xgcd(b, n):
-	"""
-	Performs Extended Euclidian Algorithm.
-	Returns GCD(X, Y), A, B for equation
-	X*A + Y*B = GCD(X, Y) where X, Y, A, B are all integers.
-	"""
+    """
+    Performs Extended Euclidian Algorithm.
+    Returns GCD(X, Y), A, B for equation
+    X*A + Y*B = GCD(X, Y) where X, Y, A, B are all integers.
+    """
     x0, x1, y0, y1 = 1, 0, 0, 1
     while n != 0:
         q, b, n = b // n, n, b % n
@@ -221,11 +221,30 @@ def xgcd(b, n):
         y0, y1 = y1, y0 - q * y1
     return  b, x0, y0
 
+def mod_inverse(a, n):
+    # ax + by = gcd(a, b)
+    # a * x mod b = 1
+    # b * y mod a = 1
+    #
+    # mod_inverse(a) * a mod n = 1
 
- def nonmembership_witness(acc, value, n, start_acc):
- 	gcd, x, y = xbcd(acc, value)
- 	assert gcd == 1
- 	assert False
- 	d = None # TODO
- 	a = x
- 	return a, d
+    # solve for X where a=a and b=n
+    gcd, x, y = xgcd(a, n)
+    assert gcd == 1 # this only works for coprime numbers
+    return x
+
+def nonmembership_witness(acc, value, n, start_acc):
+    gcd, x, y = xgcd(acc, value)
+
+    # if gcd of value and acc (mod n) == 1
+    # then
+    # find a, b from a * (acc mod(n)) + b * value = 1
+    # nonmembership witness is 
+    # (a, start_acc ^ -b)
+    # where start_acc ^ -b = 
+
+    assert gcd == 1
+    assert False
+    d = None # TODO
+    a = x
+    return a, d
