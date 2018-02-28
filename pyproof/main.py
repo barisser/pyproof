@@ -38,6 +38,32 @@ def verify_membership(acc, value, witness, n):
     return acc == expected_acc
 
 
+def add_many_memberships(acc, values, n):
+    witnesses = {}
+    u = acc
+    cumulative_witnesses = []
+    reverse_cumulative_witnesses = []
+
+    asc_acc = values[0]
+    desc_acc = values[-1]
+    for i in range(1, len(values)):
+        asc_acc = increment_membership_accumulator(asc_acc, values[i], n)
+        desc_acc = increment_membership_accumulator(desc_acc, values[len(values) - i], n)
+
+    assert asc_acc == desc_acc
+
+    for i in range(len(values)):
+        import pdb;pdb.set_trace()
+        my_witness = increment_membership_accumulator(acc, cumulative_witnesses[i], n)
+        my_witness = increment_membership_accumulator(my_witness, reverse_cumulative_witnesses[-i], n)
+        assert verify_membership(u, values[i], my_witness, n)
+        witnesses[values[i]] = my_witness
+
+    return u, witnesses
+
+
+
+
 # Merkle Trees
 
 def sha256(value):
