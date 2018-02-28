@@ -1,6 +1,25 @@
+VIRTENV = penv
+PACKAGE = pyproof
 
-develop:
-	virtualenv penv && . penv/bin/activate && python setup.py install && pip install -e .
+$(VIRTENV):
+	rm -rf $(VIRTENV)
+	virtualenv $(VIRTENV)
+	. $(VIRTENV)/bin/activate; pip install -e .
 
-test:
-	pytest tests
+dist:
+	python setup.py sdist
+
+lint: $(VIRTENV) develop
+	. $(VIRTENV)/bin/activate; pylint --rcfile=../../.pylintrc pyproof
+
+test: $(VIRTENV) develop FORCE
+	export PYTHONPATH=.; . $(VIRTENV)/bin/activate; py.test tests -vvv --cov pyproof --cov-report=term-missing
+
+develop: $(VIRTENV)
+	. $(VIRTENV)/bin/activate; pip install pylint pytest pytest-cov && pip install -e .
+
+clean:
+	rm -rf $(VIRTENV) dist $(PACKAGE).egg-info
+	find . -name '*.pyc' -delete
+
+FORCE:

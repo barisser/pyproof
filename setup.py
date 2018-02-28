@@ -6,6 +6,7 @@ setup(
       description='Solid as a Rock',
       license='MIT',
       install_requires=[
+          'pycrypto'
         ],
       packages=['pyproof'],
       tests_require=[
