@@ -2,7 +2,10 @@
 import hashlib
 import random
 
+import pycrypto
+
 import pyproof
+
 
 
 def test_mod_exp():
