@@ -4,9 +4,6 @@ import math
 
 from Crypto.Util import number
 
-# a strong prime i generated.
-DEFAULT_G = 12844055805826788413535687696726136756341985231539882502903698278083628202081157528816564627345423952056459086734203918449538523807394246649413666654218779L
-
 def get_prime(digits=512, strong=True):
     if strong:
         return number.getStrongPrime(digits)
