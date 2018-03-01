@@ -42,6 +42,14 @@ def test_many_memberships():
     for v in values:
         assert pyproof.verify_membership(acc, v, values[v], n)
 
+def test_add_many_memberships():
+    digits = 64
+    acc = pyproof.get_prime(digits=digits, strong=False)
+    n = pyproof.get_prime(digits=digits, strong=False)
+    values = [pyproof.get_prime(digits=digits, strong=False) for _ in range(10)]
+
+    new_acc, witnesses = pyproof.add_many_memberships(acc, values, n)
+
 
 def test_tree():
     values = [str(x) for x in range(4)]

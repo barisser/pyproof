@@ -4,8 +4,11 @@ import math
 
 from Crypto.Util import number
 
-def get_prime(digits=512):
-    return number.getStrongPrime(digits)
+def get_prime(digits=512, strong=True):
+    if strong:
+        return number.getStrongPrime(digits)
+    else:
+        return number.getPrime(digits)
 
 # Cryptographic Accumulators
 
@@ -44,20 +47,38 @@ def add_many_memberships(acc, values, n):
     cumulative_witnesses = []
     reverse_cumulative_witnesses = []
 
-    asc_acc = values[0]
-    desc_acc = values[-1]
-    for i in range(1, len(values)):
-        asc_acc = increment_membership_accumulator(asc_acc, values[i], n)
-        desc_acc = increment_membership_accumulator(desc_acc, values[len(values) - i], n)
-
-    assert asc_acc == desc_acc
-
+    asc_acc = acc
+    desc_acc = acc
     for i in range(len(values)):
-        import pdb;pdb.set_trace()
-        my_witness = increment_membership_accumulator(acc, cumulative_witnesses[i], n)
-        my_witness = increment_membership_accumulator(my_witness, reverse_cumulative_witnesses[-i], n)
-        assert verify_membership(u, values[i], my_witness, n)
+        my_witness = acc
+        for j in range(len(values)): # inefficient
+            if i == j:
+                continue
+            else:
+                my_witness = increment_membership_accumulator(my_witness, values[j], n)
         witnesses[values[i]] = my_witness
+        assert verify_membership(u, values[i], my_witness, n)
+
+        u = increment_membership_accumulator(u, values[i], n)
+
+    return u, witnesses
+
+
+    #     asc_acc = increment_membership_accumulator(asc_acc, values[i], n)
+    #     cumulative_witnesses.append(asc_acc)
+    #     desc_acc = increment_membership_accumulator(desc_acc, values[-i], n)
+    #     reverse_cumulative_witnesses.append(desc_acc)
+
+    # assert asc_acc == desc_acc
+
+    # for i in range(len(values)):
+    #     if i > 0:   
+    #         my_witness = increment_membership_accumulator(acc, cumulative_witnesses[i], n)
+    #     else:
+    #         my_witness = 
+    #     my_witness = increment_membership_accumulator(my_witness, reverse_cumulative_witnesses[-i], n)
+    #     assert verify_membership(u, values[i], my_witness, n)
+    #     witnesses[values[i]] = my_witness
 
     return u, witnesses
 
