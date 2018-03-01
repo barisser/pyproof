@@ -2,6 +2,13 @@
 import hashlib
 import math
 
+from Crypto.Util import number
+
+def get_prime(digits=512, strong=True):
+    if strong:
+        return number.getStrongPrime(digits)
+    else:
+        return number.getPrime(digits)
 
 # Cryptographic Accumulators
 
@@ -32,6 +39,50 @@ def increment_membership_accumulator(acc, value, n):
 def verify_membership(acc, value, witness, n):
     expected_acc = increment_membership_accumulator(witness, value, n)
     return acc == expected_acc
+
+
+def add_many_memberships(acc, values, n):
+    witnesses = {}
+    u = acc
+    cumulative_witnesses = []
+    reverse_cumulative_witnesses = []
+
+    asc_acc = acc
+    desc_acc = acc
+    for i in range(len(values)):
+        my_witness = acc
+        for j in range(len(values)): # inefficient
+            if i == j:
+                continue
+            else:
+                my_witness = increment_membership_accumulator(my_witness, values[j], n)
+        witnesses[values[i]] = my_witness
+        assert verify_membership(u, values[i], my_witness, n)
+
+        u = increment_membership_accumulator(u, values[i], n)
+
+    return u, witnesses
+
+
+    #     asc_acc = increment_membership_accumulator(asc_acc, values[i], n)
+    #     cumulative_witnesses.append(asc_acc)
+    #     desc_acc = increment_membership_accumulator(desc_acc, values[-i], n)
+    #     reverse_cumulative_witnesses.append(desc_acc)
+
+    # assert asc_acc == desc_acc
+
+    # for i in range(len(values)):
+    #     if i > 0:   
+    #         my_witness = increment_membership_accumulator(acc, cumulative_witnesses[i], n)
+    #     else:
+    #         my_witness = 
+    #     my_witness = increment_membership_accumulator(my_witness, reverse_cumulative_witnesses[-i], n)
+    #     assert verify_membership(u, values[i], my_witness, n)
+    #     witnesses[values[i]] = my_witness
+
+    return u, witnesses
+
+
 
 
 # Merkle Trees
@@ -233,8 +284,14 @@ def mod_inverse(a, n):
     assert gcd == 1 # this only works for coprime numbers
     return x
 
-def nonmembership_witness(acc, value, n, start_acc):
+def nonmembership_witness(acc, value, n, ):
     gcd, x, y = xgcd(acc, value)
+
+
+    # nonmembership proof
+    # https://www.cs.purdue.edu/homes/ninghui/papers/accumulator_acns07.pdf
+    # nonmembership true if   c^a = d^x * g (mod n) where a, d are the nonmembership proof witnesses, g and n are parameters of setup, c is accumulator, x is value to test
+    # g and n are large primes
 
     # if gcd of value and acc (mod n) == 1
     # then
@@ -248,3 +305,18 @@ def nonmembership_witness(acc, value, n, start_acc):
     d = None # TODO
     a = x
     return a, d
+
+
+def verify_nonmembership(acc, value, witness_a, witness_d, n, g):
+    return mod_exp(acc, witness_a) == (mod_exp(witness_d, value, n) * g) % n
+
+# How to compute membership witness
+# acc = mod_exp(acc_old, new_value, n)
+# an accumulator derived from a set of values X = C = g ^ u mod n  where u is the multiple of all values in set X minus value x
+# witness for value x ===> g ^ (u/x) mod n
+# by definition all values in set X are coprime to each other (and large primes)
+# thus gcd(u, x) = 1  --> thus there exists some au + bx = 1
+# compute a` and b` using euclid's algorithm
+# we need to guarantee that a and b are positive so we do
+# a = a` + kx   and   b = b` - ku   where k is some integer
+# let d = g ^ -b mod n
