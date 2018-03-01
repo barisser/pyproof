@@ -2,18 +2,35 @@
 import hashlib
 import random
 
-#from pyproof import main
 import pyproof
 
 
 def test_mod_exp():
     for _ in range(100):
-        a = random.randint(1, 10**5)
-        b = random.randint(1, 10**4)
-        n = random.randint(1, 1000)
+        a = pyproof.get_prime(digits=8, strong=False)
+        b = pyproof.get_prime(digits=8, strong=False)
+        n = pyproof.get_prime(digits=8, strong=False)
 
         # test for reasonably small numbers
         assert pyproof.mod_exp(a, b, n) == (a ** b) % n
+
+    n = pyproof.get_prime(digits=8, strong=False)
+    a = pyproof.get_prime(digits=8, strong=False)
+    b = pyproof.get_prime(digits=8, strong=False)
+    c = pyproof.get_prime(digits=8, strong=False)
+
+    # (a*b) mod n == (a mod n * b mod n) mod n
+
+    assert (a * b) % n == ((a % n) * (b % n)) % n
+
+    # (a**b) mod n == ((a mod n)**b) mod n
+    # thus 
+    # (a**(b*c)) mod n = ((a**b mod n)**c) mod n
+    # thus
+    # mod_exp (a, b*c, n) = 
+    # mod_exp(mod_exp(a, b, n), c, n)
+
+    assert pyproof.mod_exp(pyproof.mod_exp(a, b, n), c, n) == pyproof.mod_exp(a, c * b, n)
 
 
 def test_membership():
@@ -49,6 +66,20 @@ def test_add_many_memberships():
     values = [pyproof.get_prime(digits=digits, strong=False) for _ in range(10)]
 
     new_acc, witnesses = pyproof.add_many_memberships(acc, values, n)
+
+def test_non_membership():
+    digits = 8
+    g = pyproof.get_prime(digits=digits, strong=False)
+    value = pyproof.get_prime(digits=digits, strong=False)
+    values = [pyproof.get_prime(digits=digits, strong=False) for _ in range(3)]
+    n = pyproof.get_prime(digits=digits, strong=False)
+
+    acc, witnesses = pyproof.add_many_memberships(g, values, n)
+    #import pdb;pdb.set_trace()    
+    for v, wit in witnesses.iteritems():
+        assert pyproof.verify_membership(acc, v, wit, n)
+
+    w = pyproof.compute_non_membership_witness(acc, value, g, n, values)
 
 
 def test_tree():

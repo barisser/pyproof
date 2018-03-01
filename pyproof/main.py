@@ -4,6 +4,9 @@ import math
 
 from Crypto.Util import number
 
+# a strong prime i generated.
+DEFAULT_G = 12844055805826788413535687696726136756341985231539882502903698278083628202081157528816564627345423952056459086734203918449538523807394246649413666654218779L
+
 def get_prime(digits=512, strong=True):
     if strong:
         return number.getStrongPrime(digits)
@@ -65,6 +68,53 @@ def add_many_memberships(acc, values, n):
     return u, witnesses
 
 
+def compute_non_membership_witness(acc, value, g, n, values):
+    # https://www.cs.purdue.edu/homes/ninghui/papers/accumulator_acns07.pdf
+    
+    # u = multiple of all values in set
+    # all values are primes
+    # non-member value is X
+    # gcd(x, u) == 1
+    # thus there exists some ax + bu = 1
+    # let a2 = a + kx and let b2 = b + ku
+    # then a2 * u + b2 * x = 1
+    # let d = g ^ -b2 mod n
+    # nonmembership witness is (a, d)
+    # let c = g^u = our membership accumulator value
+    # separately we have
+    # (c^a = g^(u*a) = g^(1-bx) = g^(-bx) * g = d^x * g ) mod n
+    # if above is true with given witness (a, d), nonmembership is true
+    # to verify just show that c^a mod n == d^x * g mod n
+
+    assert not value in values
+    
+    u = 1
+    for x in values:
+        u = u * x
+
+    gcd, a, b = xgcd(value, u)
+    assert gcd == 1
+    if a < 0:
+        a_diff = -a / value + 1
+    else:
+        a_diff = 0
+    if b < 0:
+        b_diff = -b / u
+    else:
+        b_diff = 0
+    k = max(a_diff, b_diff)
+    a2 = a + k * value
+    b2 = b + k * u
+    d = mod_inverse(mod_exp(g, b2, n), n)
+   # import pdb;pdb.set_trace()
+    assert verify_non_membership(acc, a2, d, value, g, n)
+    return a2, d
+
+def verify_non_membership(acc, witness_a, witness_d, value, g, n):
+    left = mod_exp(acc, witness_a, n)
+    right = (mod_exp(witness_d, value, n) * (g % n)) % n
+    return left == right
+
 
 # Merkle Trees
 
@@ -104,7 +154,6 @@ def parent_address(address):
 
 
 class MerkleTree:
-
     def __init__(self, values, algo='sha256'):
         self.algo = algo
         self.nodes = {}
@@ -264,40 +313,3 @@ def mod_inverse(a, n):
     gcd, x, y = xgcd(a, n)
     assert gcd == 1 # this only works for coprime numbers
     return x
-
-def nonmembership_witness(acc, value, n, ):
-    gcd, x, y = xgcd(acc, value)
-
-
-    # nonmembership proof
-    # https://www.cs.purdue.edu/homes/ninghui/papers/accumulator_acns07.pdf
-    # nonmembership true if   c^a = d^x * g (mod n) where a, d are the nonmembership proof witnesses, g and n are parameters of setup, c is accumulator, x is value to test
-    # g and n are large primes
-
-    # if gcd of value and acc (mod n) == 1
-    # then
-    # find a, b from a * (acc mod(n)) + b * value = 1
-    # nonmembership witness is 
-    # (a, start_acc ^ -b)
-    # where start_acc ^ -b = 
-
-    assert gcd == 1
-    assert False
-    d = None # TODO
-    a = x
-    return a, d
-
-
-def verify_nonmembership(acc, value, witness_a, witness_d, n, g):
-    return mod_exp(acc, witness_a) == (mod_exp(witness_d, value, n) * g) % n
-
-# How to compute membership witness
-# acc = mod_exp(acc_old, new_value, n)
-# an accumulator derived from a set of values X = C = g ^ u mod n  where u is the multiple of all values in set X minus value x
-# witness for value x ===> g ^ (u/x) mod n
-# by definition all values in set X are coprime to each other (and large primes)
-# thus gcd(u, x) = 1  --> thus there exists some au + bx = 1
-# compute a` and b` using euclid's algorithm
-# we need to guarantee that a and b are positive so we do
-# a = a` + kx   and   b = b` - ku   where k is some integer
-# let d = g ^ -b mod n
