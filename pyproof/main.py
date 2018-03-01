@@ -57,31 +57,12 @@ def add_many_memberships(acc, values, n):
             else:
                 my_witness = increment_membership_accumulator(my_witness, values[j], n)
         witnesses[values[i]] = my_witness
-        assert verify_membership(u, values[i], my_witness, n)
-
         u = increment_membership_accumulator(u, values[i], n)
 
-    return u, witnesses
-
-
-    #     asc_acc = increment_membership_accumulator(asc_acc, values[i], n)
-    #     cumulative_witnesses.append(asc_acc)
-    #     desc_acc = increment_membership_accumulator(desc_acc, values[-i], n)
-    #     reverse_cumulative_witnesses.append(desc_acc)
-
-    # assert asc_acc == desc_acc
-
-    # for i in range(len(values)):
-    #     if i > 0:   
-    #         my_witness = increment_membership_accumulator(acc, cumulative_witnesses[i], n)
-    #     else:
-    #         my_witness = 
-    #     my_witness = increment_membership_accumulator(my_witness, reverse_cumulative_witnesses[-i], n)
-    #     assert verify_membership(u, values[i], my_witness, n)
-    #     witnesses[values[i]] = my_witness
+    for value in witnesses:
+        assert verify_membership(u, value, witnesses[value], n)
 
     return u, witnesses
-
 
 
 
