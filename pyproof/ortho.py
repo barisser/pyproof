@@ -1,4 +1,5 @@
 import copy
+import math
 
 import numpy as np
 import sympy as sp
@@ -8,27 +9,36 @@ def orthogonal_vector(vectors):
     Finds a vector that is orthogonal to all given vectors.
     """
     n_dimensions = len(vectors) + 1
+    assert n_dimensions == len(vectors[0])
 
-    bases = sp.symbols('d0:{0}'.format(n_dimensions))
-    #vects = copy.copy(vectors)
-    #vects.append(bases)
-    #vects = vects[::-1]
     v = np.array(vectors)
-    #v = sp.Matrix(vects)
     ortho_vector = []
-    for n, base in enumerate(bases):
-        sign = -1 ** n
+
+    for n in range(n_dimensions):
+        sign = math.pow(-1, n)
         matrix_a = v[:, :n]
         matrix_b = v[:, n+1:]        
         my_matrix = np.append(matrix_a, matrix_b, axis=1)
-        #import pdb;pdb.set_trace()
         ortho_vector.append(np.linalg.det(my_matrix) * sign)
 
-    return np.array(ortho_vector)
-    # import pdb;pdb.set_trace()
-    # ortho_vector_sym = v.det()
-    # d = ortho_vector_sym.as_coefficients_dict()
-    # return np.array([d.get(k, 0) for k in bases])
+    q =  np.array(ortho_vector)
+    return q / np.linalg.norm(q)
+
+def symbolic_orthogonal_vector(vectors):
+    """
+    Finds a vector that is orthogonal to all given vectors.
+    """
+    n_dimensions = len(vectors) + 1
+
+    bases = sp.symbols('d0:{0}'.format(n_dimensions))
+    vects = copy.copy(vectors)
+    vects.append(bases)
+    v = sp.Matrix(vects)
+
+    ortho_vector_sym = v.det()
+    d = ortho_vector_sym.as_coefficients_dict()
+    return np.array([d.get(k, 0) for k in bases])
+
 
 def custom_det(matrix):
     """
@@ -42,12 +52,13 @@ def set_dims(n):
     dims = sp.Matrix(sp.symbols('x0:{0}'.format(n)))
     return dims
 
-n_dimensions = 5
+n_dimensions = 100
 dims = set_dims(n_dimensions)
 
 v = []
 for i in range(n_dimensions-1):
-    v.append(np.random.random((n_dimensions)))
+    r = np.random.random((n_dimensions))
+    v.append(r / np.linalg.norm(r))
 
 
 def symbolize(vector):
@@ -90,13 +101,22 @@ def cross_product(vector1, vector2, dimensions=dims):
 import time
 t=time.time()
 q = orthogonal_vector(v)
-print time.time()-t
-print ''
-for x in v:
-    print np.dot(q, x)
-print ''
-print q
-#a=symbolize(v[3])
-# a.as_coefficients_dict()
+print "numerical {0}".format(time.time()-t)
+t2 = time.time()
 
-#cross_product(v[0], v[1])
+#sv = symbolic_orthogonal_vector(v)
+#print "symbolic: {0}".format(time.time()-t2)
+print ''
+diffs = []
+for x in v:
+    diff = np.dot(q, x)
+    diffs.append(diff)
+    if diff  > 10**-10:
+        print "large diff " + str(diff)
+ #   assert np.dot(sv, x) < 0.000000000001
+#    print np.dot(q, x)
+print "biggest diff: {0}".format(max(diffs))
+print ''
+#print q
+#print sv
+
