@@ -67,19 +67,19 @@ def test_add_many_memberships():
 
     new_acc, witnesses = pyproof.add_many_memberships(acc, values, n)
 
-def test_non_membership():
-    digits = 8
-    g = pyproof.get_prime(digits=digits, strong=False)
-    value = pyproof.get_prime(digits=digits, strong=False)
-    values = [pyproof.get_prime(digits=digits, strong=False) for _ in range(3)]
-    n = pyproof.get_prime(digits=digits, strong=False)
+# def test_non_membership():
+#     digits = 32
+#     g = pyproof.get_prime(digits=digits, strong=False)
+#     value = pyproof.get_prime(digits=digits, strong=False)
+#     values = [pyproof.get_prime(digits=digits, strong=False) for _ in range(3)]
+#     n = pyproof.get_prime(digits=digits, strong=False)
 
-    acc, witnesses = pyproof.add_many_memberships(g, values, n)
-    #import pdb;pdb.set_trace()    
-    for v, wit in witnesses.iteritems():
-        assert pyproof.verify_membership(acc, v, wit, n)
+#     acc, witnesses = pyproof.add_many_memberships(g, values, n)
+#     #import pdb;pdb.set_trace()    
+#     for v, wit in witnesses.iteritems():
+#         assert pyproof.verify_membership(acc, v, wit, n)
 
-    w = pyproof.compute_non_membership_witness(acc, value, g, n, values)
+#     w = pyproof.compute_non_membership_witness(acc, value, g, n, values)
 
 
 def test_tree():

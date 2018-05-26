@@ -66,6 +66,8 @@ def add_many_memberships(acc, values, n):
 
 
 def compute_non_membership_witness(acc, value, g, n, values):
+    # WIP, CURRENTLY BROKEN
+    
     # https://www.cs.purdue.edu/homes/ninghui/papers/accumulator_acns07.pdf
     
     # u = multiple of all values in set
@@ -92,16 +94,28 @@ def compute_non_membership_witness(acc, value, g, n, values):
     gcd, a, b = xgcd(value, u)
     assert gcd == 1
     if a < 0:
-        a_diff = -a / value + 1
+        a_diff = -a / u + 1
     else:
         a_diff = 0
-    if b < 0:
-        b_diff = -b / u
+    if b > 0:
+        b_diff = b / value + 1
     else:
         b_diff = 0
     k = max(a_diff, b_diff)
-    a2 = a + k * value
-    b2 = b + k * u
+    a2 = a + k * u
+    b2 = b - k * value
+    
+    try:
+        assert b2 > 0
+        assert a2 > 0
+    except:
+        import pdb;pdb.set_trace()
+    try:
+        assert a2 * value + b2 * u == 1
+    except:
+        import pdb;pdb.set_trace()
+    assert a * value + b * u == 1
+
     d = mod_inverse(mod_exp(g, b2, n), n)
    # import pdb;pdb.set_trace()
     assert verify_non_membership(acc, a2, d, value, g, n)
@@ -110,6 +124,7 @@ def compute_non_membership_witness(acc, value, g, n, values):
 def verify_non_membership(acc, witness_a, witness_d, value, g, n):
     left = mod_exp(acc, witness_a, n)
     right = (mod_exp(witness_d, value, n) * (g % n)) % n
+    import pdb;pdb.set_trace()
     return left == right
 
 

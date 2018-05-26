@@ -13,7 +13,7 @@ lint: $(VIRTENV) develop
 	. $(VIRTENV)/bin/activate; pylint --rcfile=../../.pylintrc pyproof
 
 test: $(VIRTENV) develop FORCE
-	export PYTHONPATH=.; . $(VIRTENV)/bin/activate; py.test tests -vvv --cov pyproof --cov-report=term-missing
+	export PYTHONPATH=.; . $(VIRTENV)/bin/activate; py.test tests -vvv -x --cov pyproof --cov-report=term-missing
 
 develop: $(VIRTENV)
 	. $(VIRTENV)/bin/activate; pip install pylint pytest pytest-cov && pip install -e .

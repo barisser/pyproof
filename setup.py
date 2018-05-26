@@ -10,7 +10,9 @@ setup(
         ],
       packages=['pyproof'],
       tests_require=[
+          'numpy',
           'pytest',
-          'pytest-cov'
+          'pytest-cov',
+          'sympy'
         ]
       )
