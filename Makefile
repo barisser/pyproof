@@ -22,4 +22,7 @@ clean:
 	rm -rf $(VIRTENV) dist $(PACKAGE).egg-info
 	find . -name '*.pyc' -delete
 
+testpdb: $(VIRTENV) develop FORCE
+	export PYTHONPATH=.; . $(VIRTENV)/bin/activate; py.test tests -vvv -x --cov pyproof --cov-report=term-missing --pdb
+
 FORCE:

@@ -36,7 +36,7 @@ def increment_membership_accumulator(acc, value, n):
     return mod_exp(acc, value, n)
 
 
-def verify_membership(acc, value, witness, n):
+def verify_hash_membership(acc, value, witness, n):
     expected_acc = increment_membership_accumulator(witness, value, n)
     return acc == expected_acc
 
@@ -60,7 +60,7 @@ def add_many_memberships(acc, values, n):
         u = increment_membership_accumulator(u, values[i], n)
 
     for value in witnesses:
-        assert verify_membership(u, value, witnesses[value], n)
+        assert verify_hash_membership(u, value, witnesses[value], n)
 
     return u, witnesses
 

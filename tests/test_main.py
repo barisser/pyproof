@@ -40,7 +40,7 @@ def test_membership():
         value = random.randint(1, acc - 1)
         n = random.randint(10**100, 10**101)
         new_acc = pyproof.increment_membership_accumulator(acc, value, n)
-        assert pyproof.verify_membership(new_acc, value, acc, n)
+        assert pyproof.verify_hash_membership(new_acc, value, acc, n)
 
 
 def test_many_memberships():
@@ -57,7 +57,7 @@ def test_many_memberships():
         acc = pyproof.increment_membership_accumulator(acc, value, n)
 
     for v in values:
-        assert pyproof.verify_membership(acc, v, values[v], n)
+        assert pyproof.verify_hash_membership(acc, v, values[v], n)
 
 def test_add_many_memberships():
     digits = 64
