@@ -27,10 +27,18 @@ def test_ortho_data():
     assert np.allclose(np.linalg.norm(ovector), 1.0)
 
     data2 = [str(random.random()) for _ in range(n)]
-    vectors2 = [pyproof.data_to_vector(x, len(data2) + 1) for x in data2]
+    vectors2 = [pyproof.data_to_vector(x, n + 1) for x in data2]
     assert np.allclose(pyproof.datalist_to_vectors(data2),
             vectors2)
 
     for vector in vectors2:
         assert pyproof.verify_nonmembership_vector(ovector, vector)
         assert not pyproof.verify_membership_vector(ovector, vector)
+
+    for d in data2:
+        assert not pyproof.verify_membership(ovector, d)
+        assert pyproof.verify_nonmembership(ovector, d)
+    for d in data:
+        assert pyproof.verify_membership(ovector, d)
+        assert not pyproof.verify_nonmembership(ovector, d)
+#    assert False

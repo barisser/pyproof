@@ -108,15 +108,16 @@ def int_to_list(myint, space):
 
 def verify_membership_vector(ovector, vector, tolerance=DEFAULT_TOLERANCE):
     diff = abs(np.dot(ovector, vector))
-    if diff >= tolerance:
-        logging.error("Large diff seen {0}, not a member".format(diff))
     return diff < tolerance 
 
 def verify_nonmembership_vector(ovector, vector, tolerance=DEFAULT_TOLERANCE):
     diff = abs(np.dot(ovector, vector))
-    if diff < tolerance:
-        logging.error("Small diff seen {0}, is probably a member.".format(diff))
     return diff >= tolerance
 
-#def verify_membership(ovector, data, tolerance=DEFAULT_TOLERANCE)
-    
+def verify_membership(ovector, data, tolerance=DEFAULT_TOLERANCE):
+    vector = data_to_vector(data, len(ovector))
+    return verify_membership_vector(ovector, vector, tolerance)
+
+def verify_nonmembership(ovector, data, tolerance=DEFAULT_TOLERANCE):
+    vector = data_to_vector(data, len(ovector))
+    return verify_nonmembership_vector(ovector, vector, tolerance)
