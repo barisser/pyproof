@@ -121,7 +121,7 @@ def compute_non_membership_witness(acc, value, g, n, values):
     assert verify_non_membership(acc, a2, d, value, g, n)
     return a2, d
 
-def verify_non_membership(acc, witness_a, witness_d, value, g, n):
+def verify_non_membership_old(acc, witness_a, witness_d, value, g, n):
     left = mod_exp(acc, witness_a, n)
     right = (mod_exp(witness_d, value, n) * (g % n)) % n
     import pdb;pdb.set_trace()

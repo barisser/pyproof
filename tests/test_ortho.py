@@ -22,6 +22,15 @@ def test_ortho_data():
     ovector, vectors = pyproof.data_to_orthogonal(data)
 
     for vector in vectors:
-        assert pyproof.verify_membership(ovector, vector, tolerance=10**-12)
+        assert pyproof.verify_membership_vector(ovector, vector, tolerance=10**-12)
+        assert not pyproof.verify_nonmembership_vector(ovector, vector)
     assert np.allclose(np.linalg.norm(ovector), 1.0)
-    assert False
+
+    data2 = [str(random.random()) for _ in range(n)]
+    vectors2 = [pyproof.data_to_vector(x, len(data2) + 1) for x in data2]
+    assert np.allclose(pyproof.datalist_to_vectors(data2),
+            vectors2)
+
+    for vector in vectors2:
+        assert pyproof.verify_nonmembership_vector(ovector, vector)
+        assert not pyproof.verify_membership_vector(ovector, vector)

@@ -5,6 +5,11 @@ import math
 
 import numpy as np
 
+
+DEFAULT_TOLERANCE = 10**-12
+DEFAULT_SPACE = 100
+
+
 def orthogonal_vector(vectors):
     """
     Finds a vector that is orthogonal to all given vectors.
@@ -27,7 +32,7 @@ def orthogonal_vector(vectors):
     q =  np.array(ortho_vector)
     return q / np.linalg.norm(q)
 
-def convert_data_to_hemispherical_vector(data, dimensions, angular_granularity=1.0):
+def data_to_vector(data, dimensions, space=DEFAULT_SPACE):
     """
     Converts a string into a vector in an N-dimensional space.
     The vector will be a unit vector.
@@ -37,27 +42,18 @@ def convert_data_to_hemispherical_vector(data, dimensions, angular_granularity=1
         Convert the data point into an integer X 
         Convert the integer X into a list of N integers through
         modulo division by M.
-        M is computed from 180 / angular_granularity.
-        Convert the list of N integers into N floats by
-        multiplying by angular granularity, you should have N floats
-        between 0 and 180.  These constitute spherical coordinates
-        in N dimensions.  Convert these to Cartesian coordinates.
-
-        If there are leftover values of data, raise an exception (more dimensions are needed).
         If there are unused dimensions, take the sha256 hash of the input data, use this
         to populate the remaining dimensions. 
     """
     mylist = data_to_list(data, space, dimensions)
-    my_angles = [x*angular_granularity / (2 * np.pi) for x in mylist]
-    coords = spherical_to_cartesian(1.0, my_angles)
-    return coords
+    return np.array(mylist) / np.linalg.norm(mylist)
 
-def datalist_to_vectors(datalist, angular_granularity=1.0):
+
+def datalist_to_vectors(datalist, space=DEFAULT_SPACE):
     """
     Take a datalist of length N and force it into N elements with N+1 dimensions
     """
     # ints = map(data_to_int, datalist)
-    space = int(180.0 / angular_granularity)
     target_dimensions = len(datalist) + 1
     # lists = [int_to_list(x, space, length=target_dimensions - 1) for x in ints]
     lists = [data_to_list(data, space, target_dimensions) for data in datalist]
@@ -66,15 +62,10 @@ def datalist_to_vectors(datalist, angular_granularity=1.0):
         d = np.linalg.norm(l)
         v.append(np.array(l) / d)
     return np.array(v)
-    #angles = [[x * angular_granularity / (2 * np.pi) for x in l] for l in lists]
+ 
 
-    #import pdb;pdb.set_trace()
-    
-    #return [spherical_to_cartesian(1.0, angle) for angle in angles]
-
-
-def data_to_orthogonal(datalist, angular_granularity=1.0):
-    vectors = datalist_to_vectors(datalist, angular_granularity=angular_granularity)
+def data_to_orthogonal(datalist, space=DEFAULT_SPACE):
+    vectors = datalist_to_vectors(datalist, space=space)
     return orthogonal_vector(vectors), vectors
 
 
@@ -115,8 +106,17 @@ def int_to_list(myint, space):
 
     return mylist
 
-def verify_membership(ovector, vector, tolerance=10**-12):
+def verify_membership_vector(ovector, vector, tolerance=DEFAULT_TOLERANCE):
     diff = abs(np.dot(ovector, vector))
     if diff >= tolerance:
-        logging.error("Large diff seen {0}".format(diff))
+        logging.error("Large diff seen {0}, not a member".format(diff))
     return diff < tolerance 
+
+def verify_nonmembership_vector(ovector, vector, tolerance=DEFAULT_TOLERANCE):
+    diff = abs(np.dot(ovector, vector))
+    if diff < tolerance:
+        logging.error("Small diff seen {0}, is probably a member.".format(diff))
+    return diff >= tolerance
+
+#def verify_membership(ovector, data, tolerance=DEFAULT_TOLERANCE)
+    
