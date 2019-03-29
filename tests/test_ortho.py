@@ -4,6 +4,7 @@ import numpy as np
 
 import pyproof
 
+
 def test_orthogonal_vector():
     dims = 100
     vectors = []
@@ -16,6 +17,7 @@ def test_orthogonal_vector():
     for vector in vectors:
         assert abs(np.dot(ortho_vector, vector)) < tolerance
         
+
 def test_ortho_data():
     n = 300
     data = [str(random.random()) for _ in range(n)]
