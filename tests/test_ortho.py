@@ -15,7 +15,7 @@ def test_orthogonal_vector():
     tolerance = 10**-10
     for vector in vectors:
         assert abs(np.dot(ortho_vector, vector)) < tolerance
-        
+
 def test_ortho_data():
     n = 300
     data = [str(random.random()) for _ in range(n)]
