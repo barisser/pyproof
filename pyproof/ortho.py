@@ -62,7 +62,7 @@ def datalist_to_vectors(datalist, space=DEFAULT_SPACE):
         d = np.linalg.norm(l)
         v.append(np.array(l) / d)
     return np.array(v)
- 
+
 
 def data_to_orthogonal(datalist, space=DEFAULT_SPACE):
     vectors = datalist_to_vectors(datalist, space=space)
