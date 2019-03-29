@@ -59,6 +59,7 @@ def test_many_memberships():
     for v in values:
         assert pyproof.verify_hash_membership(acc, v, values[v], n)
 
+
 def test_add_many_memberships():
     digits = 64
     acc = pyproof.get_prime(digits=digits, strong=False)
