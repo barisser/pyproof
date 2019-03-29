@@ -32,6 +32,7 @@ def orthogonal_vector(vectors):
     q =  np.array(ortho_vector)
     return q / np.linalg.norm(q)
 
+
 def data_to_vector(data, dimensions, space=DEFAULT_SPACE):
     """
     Converts a string into a vector in an N-dimensional space.
@@ -82,6 +83,7 @@ def spherical_to_cartesian(r, arr):
     co = np.roll(co, -1)
     return si * co * r
 
+
 def data_to_list(data, space, length):
     l = []
     while len(l) < length:
@@ -91,6 +93,7 @@ def data_to_list(data, space, length):
         data = hashlib.sha256(data).hexdigest()
     l = l[:length]
     return l
+
 
 def data_to_int(data):
     return int(hashlib.sha256(data).hexdigest(), 16)
@@ -106,17 +109,21 @@ def int_to_list(myint, space):
 
     return mylist
 
+
 def verify_membership_vector(ovector, vector, tolerance=DEFAULT_TOLERANCE):
     diff = abs(np.dot(ovector, vector))
     return diff < tolerance 
+
 
 def verify_nonmembership_vector(ovector, vector, tolerance=DEFAULT_TOLERANCE):
     diff = abs(np.dot(ovector, vector))
     return diff >= tolerance
 
+
 def verify_membership(ovector, data, tolerance=DEFAULT_TOLERANCE):
     vector = data_to_vector(data, len(ovector))
     return verify_membership_vector(ovector, vector, tolerance)
+
 
 def verify_nonmembership(ovector, data, tolerance=DEFAULT_TOLERANCE):
     vector = data_to_vector(data, len(ovector))
